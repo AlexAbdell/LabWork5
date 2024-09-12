@@ -3,23 +3,56 @@ package CollectionObjects;
 import Services.FileManager;
 import Services.XMLparser;
 import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.TreeSet;
+
 @XmlRootElement(name = "LabWorks")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class LabWorkRepository implements LabWorkRepositoryInterface {
+
     @XmlElement(name = "LabWork")
     private LabWorks labWorks = new LabWorks();
+
+    @XmlTransient
     private Path filePath;
 
-    public LabWorkRepository(Path path) {
+    public LabWorkRepository setPath(Path path) {
         this.filePath = path;
+        return this;
+    }
+
+    public LabWorkRepository setLabWorks(LabWorks labWorks) {
+        this.labWorks = labWorks;
+        return this;
+    }
+
+    public static LabWorkRepository loadData(Path filePath) throws IOException, JAXBException {
+        String file = FileManager.load(filePath);
+        LabWorkRepository repository = XMLparser.convertFromXML(file);
+        repository.setPath(filePath);
+        return repository;
+    }
+
+    @Override
+    public Path saveData() throws Exception {
+        if (this.labWorks.isEmpty()) {
+            throw new RuntimeException("Нечего сохранять");
+        }
+        String body = XMLparser.convertToXML(this);
+        FileManager.save(this.filePath, body);
+
+        return this.filePath;
+    }
+
+    @Override
+    public LabWorkRepository clear() {
+        this.labWorks.clear();
+        return this;
     }
 
     @Override
@@ -29,6 +62,8 @@ public class LabWorkRepository implements LabWorkRepositoryInterface {
         if (lastLabWork != null) {
             id = (lastLabWork.getId() + 1);
         }
+        LocalDateTime creationDate = LocalDateTime.now();
+        labWork.setCreationDate(creationDate);
         labWork.setId(id);
         this.labWorks.add(labWork);
     }
@@ -53,29 +88,18 @@ public class LabWorkRepository implements LabWorkRepositoryInterface {
     }
 
     @Override
-    public void clear() {
-        this.labWorks.clear();
-    }
-
-
-
-    @Override
     public void addIfMin(LabWork labWork) throws Exception {
         LabWork minLabWork = this.getAll().first();
-        if (minLabWork.compareTo(labWork) < 0){
+        if (minLabWork.compareTo(labWork) < 0) {
             this.getAll().add(labWork);
-        }else {
+        } else {
             throw new RuntimeException("Не удалось добавить объект");
         }
     }
 
     @Override
     public void removeGreater(LabWork labWork) throws Exception {
-        for (LabWork labWork1 : this.getAll()){
-            if (labWork.compareTo(labWork1) < 0){
-                this.getAll().remove(labWork1);
-            }
-        }
+        this.getAll().removeIf(labWork1 -> labWork.compareTo(labWork1) < 0);
     }
 
     @Override
@@ -95,34 +119,20 @@ public class LabWorkRepository implements LabWorkRepositoryInterface {
 
     @Override
     public LabWorks filterGreaterThanDifficulty(String name) throws Exception {
-        if (this.getAll().isEmpty()){
+        if (this.getAll().isEmpty()) {
             throw new RuntimeException("Нет элементов коллекций");
         }
         Difficulty difficulty = Difficulty.getByString(name);
-        if (difficulty == null){
+        if (difficulty == null) {
             throw new RuntimeException("Указанная сложность не найдена");
         }
         LabWorks filteredLabWorks = new LabWorks();
-        for (LabWork labWork : this.getAll()){
-            if (labWork.getDifficulty().compareTo(difficulty) > 0){
+        for (LabWork labWork : this.getAll()) {
+            if (labWork.getDifficulty().compareTo(difficulty) > 0) {
                 filteredLabWorks.add(labWork);
             }
         }
         return filteredLabWorks;
-    }
-
-    @Override
-    public void loadData() throws IOException, JAXBException {
-        String body = FileManager.load(this.filePath);
-        this.labWorks = XMLparser.convertFromXML(body);
-    }
-    @Override
-    public void saveData() throws Exception {
-        if (this.labWorks.isEmpty()){
-            throw new RuntimeException("Нечего сохранять");
-        }
-        String body = XMLparser.convertToXML(this);
-        FileManager.save(this.filePath, body);
     }
 
     @Override

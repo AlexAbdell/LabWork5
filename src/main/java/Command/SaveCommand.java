@@ -1,11 +1,11 @@
 package Command;
 
 
-
 import App.App;
 import Command.AbstractCommand;
 import Command.Command;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class SaveCommand extends AbstractCommand implements Command {
@@ -15,7 +15,8 @@ public class SaveCommand extends AbstractCommand implements Command {
 
     @Override
     public void Handle(List<String> a) throws Exception {
-        this.app.labWorkRep.saveData();
+        Path path = this.app.labWorkRep.saveData();
+        System.out.printf("Файл сохранен с названием %s \n", path.toString());
     }
 
 

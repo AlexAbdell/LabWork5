@@ -2,8 +2,6 @@ package Command;
 
 
 import App.App;
-import Command.AbstractCommand;
-import Command.Command;
 
 import java.util.List;
 
@@ -18,7 +16,7 @@ public class ClearCommand extends AbstractCommand implements Command {
         super(app);
     }
 
-    public String getDescription(){
+    public String getDescription() {
         return "Очистить коллекцию";
     }
 }
