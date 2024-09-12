@@ -24,5 +24,6 @@ public class FileManager {
         FileOutputStream oFile = new FileOutputStream(file, false);
         oFile.write(body.getBytes());
         oFile.close();
+
     }
 }
