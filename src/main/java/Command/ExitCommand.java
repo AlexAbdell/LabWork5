@@ -16,7 +16,7 @@ public class ExitCommand extends AbstractCommand implements Command {
     @Override
     public void Handle(List<String> a) throws Exception {
         System.out.println("Завершение программы");
-        this.app.scanner.close();
+        this.app.exit();
     }
 
     @Override
